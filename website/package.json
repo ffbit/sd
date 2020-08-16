@@ -1,0 +1,21 @@
+{
+  "name": "website",
+  "version": "0.0.1",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon -e js,json,pug"
+  },
+  "keywords": [],
+  "author": "Dmytro Chyzhykov <dmytro.chyzhykov@gmail.com> (http://ffbit.com)",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "express": "^4.17.1",
+    "heap": "^0.2.6",
+    "pug": "^3.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
