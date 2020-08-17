@@ -4,18 +4,18 @@ html
     link(rel='icon' href='data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAIAAgAAD/4QCMRXhpZgAATU0AKgAAAAgABQESAAMAAAABAAEAAAEaAAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAIAAIdpAAQAAAABAAAAWgAAAAAAAAAgAAAAAQAAACAAAAABAAOgAQADAAAAAQABAACgAgAEAAAAAQAAABCgAwAEAAAAAQAAABAAAAAA/+0AOFBob3Rvc2hvcCAzLjAAOEJJTQQEAAAAAAAAOEJJTQQlAAAAAAAQ1B2M2Y8AsgTpgAmY7PhCfv/AABEIABAAEAMBIgACEQEDEQH/xAAfAAABBQEBAQEBAQAAAAAAAAAAAQIDBAUGBwgJCgv/xAC1EAACAQMDAgQDBQUEBAAAAX0BAgMABBEFEiExQQYTUWEHInEUMoGRoQgjQrHBFVLR8CQzYnKCCQoWFxgZGiUmJygpKjQ1Njc4OTpDREVGR0hJSlNUVVZXWFlaY2RlZmdoaWpzdHV2d3h5eoOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4eLj5OXm5+jp6vHy8/T19vf4+fr/xAAfAQADAQEBAQEBAQEBAAAAAAAAAQIDBAUGBwgJCgv/xAC1EQACAQIEBAMEBwUEBAABAncAAQIDEQQFITEGEkFRB2FxEyIygQgUQpGhscEJIzNS8BVictEKFiQ04SXxFxgZGiYnKCkqNTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqCg4SFhoeIiYqSk5SVlpeYmZqio6Slpqeoqaqys7S1tre4ubrCw8TFxsfIycrS09TV1tfY2dri4+Tl5ufo6ery8/T19vf4+fr/2wBDAAMCAgMCAgMDAwMEAwMEBQgFBQQEBQoHBwYIDAoMDAsKCwsNDhIQDQ4RDgsLEBYQERMUFRUVDA8XGBYUGBIUFRT/2wBDAQMEBAUEBQkFBQkUDQsNFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBT/3QAEAAH/2gAMAwEAAhEDEQA/APTvjd4v1L4k+IYNL8DePkstJ07SRqtydBuVE80skvlQ7pdwVI1zuYE9Acg8CvmCL48+M9c8L6p4b8VzJrl5p13LC3iHzf8ASX2SNGyAKoQYCbSVHzqFJxmofD/jmL4aeL72CdWvtUisWtjEjiJdrsrEoQpyylAQCCD83HNeMp478QweIPECXVjbXtsbgyXRWTEpaTDHaVAV3IcHgADP0rwniMVieeW17aX6eR688LRp0YQtaSev/BP/2Q==')
   body
     h1= title
-  div
-    ul
-      each link in links
-        li
-          a(href='/' + link + '.html')= link
-  dif(class='footer')
-    a(href='/index.html') Home
-    span -
-    a(href='/' + title + '-broken.html') A broken link
-    span -
-    a(href='/just-broken.html') Another broken link 
-    span -
-    a(href='https://example.org/index.html') An external link
-    span -
-    a(href='https://example.org/index.html?msg=hello') An external link
+    div
+      ul
+        each link in links
+          li
+            a(href='/' + link + '.html')= link
+    div(class='footer')
+      a(href='/index.html') Home
+      span -
+      a(href='/' + title + '-broken.html') A broken link
+      span -
+      a(href='/just-broken.html') Another broken link 
+      span -
+      a(href='https://example.org/index.html') An external link
+      span -
+      a(href='https://example.org/index.html?msg=hello') An external link

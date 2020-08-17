@@ -1,0 +1,23 @@
+{
+  "name": "worker",
+  "version": "0.0.1",
+  "description": "Crawler",
+  "main": "crawler.js",
+  "scripts": {
+    "start": "nodemon"
+  },
+  "keywords": [],
+  "author": "Dmytro Chyzhykov <dmytro.chyzhykov@gmail.com> (http://ffbit.com)",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "amqp-connection-manager": "^3.2.0",
+    "amqplib": "^0.6.0",
+    "axios": "^0.19.2",
+    "redis": "^3.0.2",
+    "redlock": "^4.1.0"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  }
+}
