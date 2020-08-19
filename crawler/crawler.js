@@ -77,9 +77,9 @@ function fetch(task) {
     });
 }
 
+const linkParser = require('./main/link-parser');
 async function parse(task, pageContents) {
-  console.log('parsing:', task, pageContents);
-  return [pageContents, 'url 1', 'url 2', 'url 3'];
+  return [pageContents, ...linkParser(task.url, pageContents)];
 }
 
 async function ingest(task, pageContents, ...urls) {

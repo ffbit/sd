@@ -4,7 +4,8 @@
   "description": "Crawler",
   "main": "crawler.js",
   "scripts": {
-    "start": "nodemon"
+    "start": "nodemon",
+    "test": "jest"
   },
   "keywords": [],
   "author": "Dmytro Chyzhykov <dmytro.chyzhykov@gmail.com> (http://ffbit.com)",
@@ -14,10 +15,12 @@
     "amqp-connection-manager": "^3.2.0",
     "amqplib": "^0.6.0",
     "axios": "^0.19.2",
+    "htmlparser2": "^4.1.0",
     "redis": "^3.0.2",
     "redlock": "^4.1.0"
   },
   "devDependencies": {
+    "jest": "^26.4.0",
     "nodemon": "^2.0.4"
   }
 }
