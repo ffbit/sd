@@ -1,5 +1,6 @@
 'use strict';
 
+
 const linkParser = require('./link-parser');
 const each = require('jest-each').default;
 
