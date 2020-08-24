@@ -14,6 +14,8 @@ const queuePrefetchCount = (+process.env.QUEUE_PREFETCH_COUNT || 16);
 const createLogger = require('./main/logger');
 const logger = createLogger('CRAWLER');
 
+const storage = require('./main/storage');
+
 const linkParser = require('./main/link-parser');
 
 const Queue = require('./main/queue');
@@ -38,7 +40,9 @@ queue.subscribe(async (url) => {
   // logger.info('links %s', links.join(','));
   logger.info('parsed %s links from %s', links.length, url);
 
-  links.forEach(ingest);
+  await links.map(ingest);
+
+  await storage.savePage(url, html, links);
 
   return 'ok';
 });

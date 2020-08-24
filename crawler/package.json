@@ -15,6 +15,7 @@
     "amqp-connection-manager": "^3.2.0",
     "amqplib": "^0.6.0",
     "axios": "^0.19.2",
+    "cassandra-driver": "^4.6.0",
     "htmlparser2": "^4.1.0",
     "redis": "^3.0.2",
     "redlock": "^4.1.0",
