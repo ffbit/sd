@@ -1,6 +1,9 @@
 'use strict';
 
 
+const createLogger = require('./main/logger');
+const logger = createLogger('CRAWLER');
+
 // https://github.com/axios/axios/issues/1846
 const http = require('http');
 const httpAgent = new http.Agent({ keepAlive: true });
@@ -9,38 +12,24 @@ const axiosClient = axios.create({ httpAgent });
 
 const urlQueue = process.env.URL_QUEUE || 'url_queue';
 const websiteUrl = process.env.WEBSITE_URL || 'http://localhost:3000/';
-const queuePrefetchCount = (+process.env.QUEUE_PREFETCH_COUNT || 16);
-
-const createLogger = require('./main/logger');
-const logger = createLogger('CRAWLER');
-
+const queuePrefetchCount = +process.env.QUEUE_PREFETCH_COUNT || 16;
+const queue = require('./main/queue')(urlQueue, queuePrefetchCount);
 const storage = require('./main/storage');
-
 const linkParser = require('./main/link-parser');
 
-const Queue = require('./main/queue');
 
-const queue = new Queue(urlQueue, queuePrefetchCount);
-
-const Lock = require('./main/lock');
-const lock = new Lock();
-const ingest = (url) => {
-  return lock.lock(url, () => queue.ingest(url));
-}
-
-ingest(websiteUrl);
+queue.ingest(websiteUrl);
 
 queue.subscribe(async (url) => {
   logger.info(`in the consumer ${url}`);
 
   const html = await fetch(url);
-  // logger.info(`html ${html}`);
 
   const links = await linkParser(url, html);
-  // logger.info('links %s', links.join(','));
   logger.info('parsed %s links from %s', links.length, url);
 
-  await links.map(ingest);
+  await Promise.allSettled(links.map((url) => queue.ingest(url)));
+  // await links.map((url) => queue.ingest(url));
 
   await storage.savePage(url, html, links);
 
@@ -52,7 +41,7 @@ function fetch(url) {
     .then(response => response, error => {
       logger.error(`failed to get url ${url} due to ${error.message}`);
       if (!error.response) {
-        throw(error);
+        handleError(error);
       }
       return error.response;
     }).then(response => response.data, handleError);

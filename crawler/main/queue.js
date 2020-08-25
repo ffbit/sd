@@ -12,90 +12,104 @@ const connection = amqp.connect(queueHosts.map(host => 'amqp://' + host));
 const createLogger = require('./logger');
 const logger = createLogger('QUEUE');
 const addTerminationHook = require('./termination-hook');
+const errorHandler = require('./error-handler');
+const Lock = require('./lock');
+const lock = new Lock();
 
+function createQueue(queueName, prefetchCount) {
+  let sentCount = 0;
+  let ackedCount = 0;
+  let rejectedCount = 0;
 
-let sentCount = 0;
-let ackedCount = 0;
-let rejectedCount = 0;
+  const diagnosticsLogger = createLogger(`DIAGNOSTICS ${queueName} ${Date.now()}`);
+  const diagnostics = setInterval(() => {
+    diagnosticsLogger.debug(`sent %s, acked %s, rejected %s, acked + rejected %s`,
+      sentCount, ackedCount, rejectedCount, ackedCount + rejectedCount);
+  }, 1000);
 
-const diagnosticsLogger = createLogger('DIAGNOSTICS');
-const diagnostics = setInterval(() => {
-  diagnosticsLogger.debug(`sent %s, acked %s, rejected %s, acked + rejected %s`, sentCount, ackedCount, rejectedCount, ackedCount + rejectedCount);
-}, 1000);
+  addTerminationHook(() => {
+    clearInterval(diagnostics);
+  });
 
-function handleError(error) {
-  logger.error(error);
-  throw(error);
-}
+  class Queue {
 
-class Queue {
+    constructor(queue, prefetchCount = 1) {
+      this.queue = queue;
+      this.channelWrapper = connection.createChannel({
+        json: false,
+        setup: channel => {
+          channel.prefetch(prefetchCount);
 
-  constructor(queue, prefetchCount = 1) {
-    this.queue = queue;
-    this.channelWrapper = connection.createChannel({
-      json: false,
-      setup: channel => {
-        channel.prefetch(prefetchCount);
-    
-        return channel.assertQueue(queue, {
-          name: queue,
-          durable: true,
-          arguments: {
-            'x-queue-mode': 'lazy',
-            'queue-mode': 'lazy'
-          }
-        });
-      }
-    });
-  }
+          return channel.assertQueue(queue, {
+            name: queue,
+            durable: true,
+            arguments: {
+              'x-queue-mode': 'lazy',
+              'queue-mode': 'lazy'
+            }
+          });
+        }
+      });
 
-  ingest(url) {
-    return this.channelWrapper
-      .sendToQueue(this.queue, Buffer.from(url), { persistent: true })
-      .then((ok) => {
-        logger.info(`url ${url} was sent to ${this.queue}`);
-        sentCount++;
-        return ok;
-      }, handleError);
-  }
-
-  subscribe(consumer) {
-    const onMessage = (channel) => {
-      return (message) => {
-        const content = message.content.toString();
-        logger.debug(`=> ${content}`);
-        const onResolve = (...args) => {
-          channel.ack(message);
-          ackedCount++;
-          
-          return args;
-        };
-        const onReject = (error) => {
-          channel.reject(message);
-          rejectedCount++;
-          logger.error(`rejected ${content} due to`, error);
-          
-          throw(error);
-        };
-
-        return Promise.resolve(consumer(content))
-          .then(onResolve, onReject);
-      }
+      const self = this;
+      addTerminationHook(() => {
+        self.channelWrapper.close();
+      });
     }
 
-    this.channelWrapper.addSetup((channel) => {
-      logger.debug('setting up the channel');
-      let options = { noAck: false, exclusive: false };
-      // Promise.all([channel.consume(this.queue, handle(channel, consumer), options)]);
-      Promise.all([channel.consume(this.queue, onMessage(channel), options).catch(logger.error)]);
-    }).catch(logger.error);
-  }
-};
+    ingest(url) {
+      const self = this;
+      return lock.lock(url, () => self.__ingest(url));
+    }
 
+    __ingest(url) {
+      return this.channelWrapper
+        .sendToQueue(this.queue, Buffer.from(url), { persistent: true })
+        .then((ok) => {
+          logger.info(`url ${url} was sent to ${this.queue}`);
+          sentCount++;
+          return ok;
+        }, errorHandler);
+    }
+
+    subscribe(consumer) {
+      const onMessage = (channel) => {
+        return (message) => {
+          const content = message.content.toString();
+          logger.debug(`=> ${content}`);
+          const onResolve = (...args) => {
+            channel.ack(message);
+            ackedCount++;
+
+            return args;
+          };
+          const onReject = (error) => {
+            channel.reject(message);
+            rejectedCount++;
+            logger.error(`rejected ${content} due to`, error);
+
+            throw(error);
+          };
+
+          return Promise.resolve(consumer(content))
+            .then(onResolve, onReject);
+        }
+      }
+
+      this.channelWrapper.addSetup((channel) => {
+        logger.debug('setting up the channel');
+        let options = { noAck: false, exclusive: false };
+        Promise.all([channel.consume(this.queue, onMessage(channel), options).catch(logger.error)]);
+      }).catch(logger.error);
+    }
+  }
+
+  return new Queue(queueName, prefetchCount);
+}
 
 addTerminationHook(() => {
   connection.close();
-  clearInterval(diagnostics);
 });
 
-module.exports = Queue;
+
+module.exports = createQueue;
