@@ -3,7 +3,7 @@
 const rnd = require('./rnd');
 const Heap = require('heap');
 
-function pageGraph(pageNum, graph = {'index': []}, idLength = 40, minEdges = 4, maxEdges = 16) {
+function pageGraph(pageNum, minEdges, maxEdges, graph = {'index': []}, idLength = 40) {
   for (let i = 0; i < pageNum; i++) {
     let id = rnd.randomId(idLength);
     while (id in graph) {
@@ -17,7 +17,7 @@ function pageGraph(pageNum, graph = {'index': []}, idLength = 40, minEdges = 4, 
     .forEach(id => heap.push({id, count: 0}));
   Object.keys(graph)
     .forEach(id => {
-      let edgeCount = rnd.randomInt(minEdges, maxEdges);
+      let edgeCount = rnd.randomInt(minEdges, maxEdges + 1);
       let edges = [];
       for (let i = 0; i < edgeCount && !heap.empty(); i++) {
         edges.push(heap.pop());

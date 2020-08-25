@@ -4,7 +4,8 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "nodemon -e js,json,pug"
+    "start": "nodemon -e js,json,pug",
+    "generate": "node generate.js"
   },
   "keywords": [],
   "author": "Dmytro Chyzhykov <dmytro.chyzhykov@gmail.com> (http://ffbit.com)",

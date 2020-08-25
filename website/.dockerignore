@@ -1,0 +1,4 @@
+node_modules
+*.log
+public-generated
+.DS_Store
