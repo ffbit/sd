@@ -17,6 +17,8 @@ const Lock = require('./lock');
 const lock = new Lock();
 
 function createQueue(queueName, prefetchCount) {
+  queueHosts.forEach(host => logger.info(`host ${host}`));
+
   let sentCount = 0;
   let ackedCount = 0;
   let rejectedCount = 0;

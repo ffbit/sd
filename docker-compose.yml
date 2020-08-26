@@ -1,0 +1,145 @@
+version: "3.8"
+
+services:
+  crawler0:
+    build:
+      context: crawler
+    image: crawler-ef5voxe802
+    container_name: crawler0
+    restart: unless-stopped
+    environment: 
+      - "WEBSITE_URL=http://website:3000/"
+      - "KEY_VALUE_STORAGE_HOST=key-value-storage0"
+      - "STORAGE_HOSTS=storage0"
+      - "QUEUE_HOSTS=queue0,queue1"
+      - "WAIT_HOSTS=website:3000,key-value-storage0:6379,storage0:9042,queue0:5672,queue1:5672"
+      - "WAIT_HOSTS_TIMEOUT=90"
+    depends_on:
+      - website
+      - queue0
+      - queue1
+      - key-value-storage0
+      - storage0
+    networks:
+      - crawler
+    tty: true
+  
+  crawler1:
+    image: crawler-ef5voxe802
+    container_name: crawler1
+    restart: unless-stopped
+    environment: 
+      - "WEBSITE_URL=http://website:3000/"
+      - "KEY_VALUE_STORAGE_HOST=key-value-storage0"
+      - "STORAGE_HOSTS=storage0"
+      - "QUEUE_HOSTS=queue0,queue1"
+      - "WAIT_HOSTS=website:3000,key-value-storage0:6379,storage0:9042,queue0:5672,queue1:5672"
+      - "WAIT_HOSTS_TIMEOUT=90"
+    depends_on:
+      - website
+      - queue0
+      - queue1
+      - key-value-storage0
+      - storage0
+    networks:
+      - crawler
+    tty: true
+
+  configuration-service:
+    build:
+      context: configuration-service
+    image: configuration-service-ef5voxe802
+    container_name: configuration-service
+    restart: unless-stopped
+    networks:
+      - crawler
+    tty: true
+
+  queue0:
+    build:
+        context: queue
+    image: queue-ef5voxe802
+    container_name: queueu0
+    restart: unless-stopped
+    depends_on:
+      - configuration-service
+    environment: 
+      - "WAIT_HOSTS=configuration-service:2379"
+      # https://www.rabbitmq.com/clustering.html#erlang-cookie
+      - "RABBITMQ_ERLANG_COOKIE=secret cookie"
+      - "RABBITMQ_NODENAME=queueu0"
+    ports:
+      - 8080:15672
+    networks:
+      - crawler
+    tty: true
+
+  queue1:
+    image: queue-ef5voxe802
+    container_name: queueu1
+    restart: unless-stopped
+    depends_on:
+      - configuration-service
+    environment: 
+      - "WAIT_HOSTS=configuration-service:2379"
+      # https://www.rabbitmq.com/clustering.html#erlang-cookie
+      - "RABBITMQ_ERLANG_COOKIE=secret cookie"
+      - "RABBITMQ_NODENAME=queueu1"
+    ports:
+      - 8081:15672
+    networks:
+      - crawler
+    tty: true
+  
+  key-value-storage0:
+    build:
+      context: key-value-storage
+    container_name: key-value-storage0
+    hostname: key-value-storage0
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    healthcheck:
+      test: ["CMD", "redis-cli", "PING"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - crawler
+    tty: true
+  
+  storage0:
+    image: cassandra:3
+    environment: 
+      - "MAX_HEAP_SIZE=256M"
+      - "HEAP_NEWSIZE=128M"
+    container_name: storage0
+    hostname: storage0
+    ports: 
+      - 9042:9042
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "SELECT now() FROM system.local"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    networks:
+      - crawler
+    tty: true
+
+  website:
+    build:
+      context: website
+    container_name: website
+    hostname: website
+    networks:
+      - crawler
+    healthcheck:
+      test: ["CMD", "curl", "http://localhost:3000"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+    tty: true
+
+networks: 
+  crawler:

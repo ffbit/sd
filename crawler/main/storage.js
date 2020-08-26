@@ -8,14 +8,35 @@ const localDataCenter = (process.env.STORAGE_DATA_CENTER || 'datacenter1');
 const logger = require('./logger')('STORAGE');
 const errorHandler = require('./error-handler')(logger);
 
-// select data_center from system.local;
+// https://github.com/datastax/nodejs-driver/blob/master/examples/metadata/metadata-table.js
 const client = new cassandra.Client({
   contactPoints: casandraHosts,
-  keyspace: 'crawler',
   localDataCenter: localDataCenter
 });
 
-client.connect();
+client.connect()
+  .then(() => {
+    const query = `
+      CREATE KEYSPACE IF NOT EXISTS crawler WITH replication = {
+        'class': 'SimpleStrategy',
+        'replication_factor': 3
+      };
+    `;
+    return client.execute(query);
+  })
+  .then((ks) => {
+    client.keyspace = 'crawler';
+    const query = `
+      CREATE TABLE IF NOT EXISTS pages (
+        url text PRIMARY KEY,
+        content text,
+        fetch_time timestamp,
+        links set<text>
+      );
+    `;
+    return client.execute(query);
+  })
+  .catch(errorHandler);
 
 // https://cassandra.apache.org/doc/latest/cql/dml.html#update
 // https://docs.datastax.com/en/dse/5.1/cql/cql/cql_using/useInsertSet.html
